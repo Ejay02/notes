@@ -41,22 +41,39 @@ const {
 );
 
 const { mutate: createNote, onDone: createNoteDone } = useMutation(gql`
-  mutation (
-    $userId: String!, 
-    $title: String, 
-    $content: String!
-    ) {
+  mutation ($userId: String!, $title: String, $content: String!) {
     insert_notes_one(
-      object: { 
-        content: "$content", 
-        title: "$title", user_id: 
-        "$userId" 
-        }
-    ){
+      object: { content: $content, title: $title, user_id: $userId }
+    ) {
       id
     }
   }
 `);
+
+const handleCreateNote = () => {
+  if (!newNote.value.title || !newNote.value.content) {
+    return alert("Please fill in all fields 🙏🏽");
+  }
+
+  createNote({
+    userId: userId.value,
+    title: newNote.value.title,
+    content: newNote.value.content,
+  });
+};
+
+createNoteDone(() => {
+  notesRefetch();
+  newNote.value = {
+    title: "",
+    content: "",
+  };
+});
+
+// parse
+const convertToHTML = (content) => {
+  return content.replace(/\n/g, "<br />");
+};
 
 const convertToDate = (date) => {
   return new Date(date).toLocaleString();
@@ -74,7 +91,7 @@ const convertToDate = (date) => {
         Logout
       </button>
     </div>
-    <form action="" @submit.prevent="" class="mb-8">
+    <form action="" @submit.prevent="handleCreateNote" class="mb-8">
       <label for="" class="block mb-4">
         <span class="block text-sm uppercase mb2">Title</span>
         <input
@@ -115,8 +132,13 @@ const convertToDate = (date) => {
         <button class="class absolute top-6 right-6 text-red-500 font-bold">
           Delete 🚮
         </button>
-        <h3 class="font-bold text-2xl mb-4">{{ note.title }}</h3>
-        <p class="text-lg text-gray-500 mb-4">{{ note.content }}</p>
+        <h3 class="font-bold text-2xl mb-4">
+          {{ note.title }}
+        </h3>
+        <p
+          class="text-lg text-gray-500 mb-4"
+          v-html="convertToHTML(note.content)"
+        ></p>
         <div class="text-sm text-gray-500 italic">
           {{ convertToDate(note.created) }}
         </div>
