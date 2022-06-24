@@ -70,6 +70,18 @@ createNoteDone(() => {
   };
 });
 
+const { mutate: deleteNote, onDone: deleteDone } = useMutation(gql`
+  mutation ($id: Int!) {
+    delete_notes(where: { id: { _eq: $id } }) {
+      affected_rows
+    }
+  }
+`);
+
+deleteDone(() => {
+  notesRefetch();
+});
+
 // parse
 const convertToHTML = (content) => {
   return content.replace(/\n/g, "<br />");
@@ -129,7 +141,10 @@ const convertToDate = (date) => {
         :key="note"
         class="relative bg-white text-slate-700 rounded-lg p-6 mb-6"
       >
-        <button class="class absolute top-6 right-6 text-red-500 font-bold">
+        <button
+          @click="() => deleteNote({ id: note.id })"
+          class="class absolute top-6 right-6 text-red-500 font-bold"
+        >
           Delete 🚮
         </button>
         <h3 class="font-bold text-2xl mb-4">
